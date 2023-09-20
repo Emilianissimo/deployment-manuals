@@ -137,6 +137,23 @@ We're gonna use certbot for our needs:
   sudo ln -s /snap/bin/certbot /usr/bin/certbot
   sudo certbot --nginx -d example.com -d www.example.com
 ```
+Also you would have troubles with Jinja generated endpoints, so you may do this:
+```python
+    from typing import Any
+    from jinja2 import pass_context
+    
+    
+    @pass_context
+    def https_url_for(context: dict, name: str, **path_params: Any) -> str:
+    
+        http_url = context["request"].url_for(name, **path_params)
+    
+        # Replace 'http' with 'https'
+        return http_url.replace("http", "https", 1)
+
+    
+    template.env.globals["https_url_for"] = https_url_for
+```
 # After redeploy
 Each redeploy, should rerun socket:
 ```
