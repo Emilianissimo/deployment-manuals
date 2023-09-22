@@ -173,11 +173,40 @@ export default defineConfig({
 
 ### Source: https://dev.to/akbarnafisa/my-first-time-implementing-ssr-using-vue-3-and-vite-e06
 
-# Tips
+# More tips from me
 
-- Remember, that you cannot access thi.$prop in created! use mounted instead
-- If you are using Vuex and Vue-Router, read next part
+- Remember, that you cannot access this.$prop in created! use mounted instead
+- If you are using any 'document', delete it or change. For example cookies, should be replaced
+- If you are using i18n and Vuex, you have to register them into entry-server.js:
+  - ```js
+    import { createApp } from './main';
+    import { renderToString } from 'vue/server-renderer';
+    import { createStore } from 'vuex'
+    import { createI18n } from 'vue-i18n'
+    import { messages, setI18nLanguage, getI18nLanguage } from './i18n' // may be plain data here in the file
+    
+    const i18n = createI18n({
+        locale: 'en',
+        fallbackLocale: 'en',
+        messages
+    })
+    
+    export const store = createStore()
+    
+    
+    export const render = async () => {
+        const { app } = createApp();
+        
+        app.use(i18n)
+        app.use(store)
+    
+        const html = await renderToString(app);
+    
+        return {
+            html,
+        };
+    };
+    
+    ```
 
-# Vuex and Vue-Router adaptation
-
-TODO
+### DO NOT USE VUE-ROUTER WITH SSR, IT IS ONLY FOR SPA, USE VITE_SSR_PLUGIN INSTEAD
