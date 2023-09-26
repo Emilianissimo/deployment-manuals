@@ -44,7 +44,7 @@
       ```
   - Set your project into ```/var/www/project_folder```. If folders are not exist, just create them.
   - Create venv with your python version 
-    - ```python3.11 -m venv venv && source .venv/bin/activate```
+    - ```python3.11 -m venv venv && source venv/bin/activate```
   - Switch alembic.ini connection to prod actual and the same for .env db link
   - Install gunicorn, uvicorn (requirements.txt)
   - Check the runtime: ```uvicorn app.main:app``` (my projects are stored into the app folder and main inside, that's why to do not break namespaces we need to call it from project root)
