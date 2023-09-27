@@ -8,7 +8,7 @@
 - PostgreSQL
 - Nginx, Gunicorn, Uvicorn, Supervisor
 ### Installation
-  - Create a new user
+  - Create a new user (if needed)
     - ```
       sudo adduser fastapi-user # replace fastapi-user with your preferred name
       sudo gpasswd -a fastapi-user sudo # add to sudoers
@@ -61,7 +61,7 @@
       VENV=/var/www/project_folder/venv/bin/activate
       LOG_LEVEL=error
     
-      cd $DIR
+      cd $DIR # important to run app.main:app
       source $VENV
     
       exec gunicorn app.main:app \
@@ -73,7 +73,6 @@
         --bind=unix:/var/www/project_folder/run/gunicorn.sock \
         --log-level=$LOG_LEVEL \
         --log-file=-
-
       ```
       - For some reason, several internal variables, like $BIND (--bind param hardcoded) aren't work and socket ain't run, so I hardcoded it, you may do whatever you want it is just running gunicorn command, which will handled by supervisor. It runs socket, workers count is CPU_COUNT + 1
   - Then ```chmod u+x gunicorn_start```, we need to give permission to file to be run (executed) by user
@@ -86,15 +85,17 @@
     - Add this:
     - ```
       [program:fastapi-app]
-      command=sh /var/www/project_folder/gunicorn_start
+      command=sh /var/www/project_folder/gunicorn_start # sh couldn't work for some reason, use bash instead
       user=fastapi-user
       autostart=true
       autorestart=true
       redirect_stderr=true
+      startsecs = 0
       stdout_logfile=/var/www/project_folder/logs/gunicorn-error.log
       ```
     - Make ```sudo supervisorctl reread && sudo supervisorctl update``` to parse new file and update runtime
     - Check it ```sudo supervisorctl status fastapi-app```
+    - Check this out by ```curl --unix-socket /var/www/project_folder/run/gunicorn.sock localhost```
   - nginx config:
     - Create new file for domain into the sites-available folder -> ```sudo nano /etc/nginx/sites-available/example.com```
     - ```nginx
@@ -129,7 +130,16 @@
        }
       ```
   - make symbolic link: ```sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/```
+  - don't forget to delete ```default``` file from ```sites-available``` in case of it could be a mess with conflicting domain names for root access
   - check and restart ```sudo nginx -t && sudo systemctl restart nginx```
+  - if you're getting an error, that you should increase ```server_names_hash_bucket_size```, than just add it at the top of your file, like so:
+    - ```
+      server_names_hash_bucket_size 128;
+      
+      upstream app_server {
+      ...
+      ```
+    - It may not work and require http if it is not Debian kind system, so just wrap it into the http {} block. (in Debian you are already in the http {} by nginx.conf)
 # Setting up SSL
 We're gonna use certbot for our needs:
 ```
